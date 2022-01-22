@@ -4,7 +4,9 @@ using Pkg.Artifacts
 using SnpArrays
 using DelimitedFiles
 
-export fastPHASE_EXE
+export fastPHASE_EXE,
+    fastphase_estim_param,
+    process_fastphase_output
 
 if Sys.isapple()
     fastPHASE_EXE = joinpath(artifact"fastPHASE", "fastPHASE")
