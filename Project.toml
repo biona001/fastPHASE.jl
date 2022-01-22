@@ -2,3 +2,9 @@ name = "fastPHASE"
 uuid = "c92b9ef3-c483-4111-80ad-75972133fafc"
 authors = ["Benjamin Chu <benchu99@hotmail.com>"]
 version = "0.1.0"
+
+[deps]
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+
+[compat]
+julia = "1.6"
