@@ -1,0 +1,23 @@
+# compute this using
+# using Tar, Inflate, SHA
+# filename = "Linuxfp.tar.gz" # use wget for the URL below
+# println("sha256: ", bytes2hex(open(sha256, filename)))
+# println("git-tree-sha1: ", Tar.tree_hash(IOBuffer(inflate_gzip(filename))))
+
+[[fastPHASE]]
+arch = "x86_64"
+git-tree-sha1 = "cc585bc7c82721764a2f1ac040cfca7bf4f7d72f"
+os = "linux"
+
+    [[fastPHASE.download]]
+    sha256 = "f0762eaae38b276bccb567d1519fa19bf35fd4078e57cbf13c7d7054150c4f36"
+    url = "http://scheet.org/code/Linuxfp.tar.gz"
+
+[[fastPHASE]]
+arch = "x86_64"
+git-tree-sha1 = "d2a5320999e1307a1c94ddab81d6ab8ad6d5efe4"
+os = "macos"
+
+    [[fastPHASE.download]]
+    sha256 = "67e71abf15205eed1b53ac726dc701d1e4e4a12f5adea31211656981e2183330"
+    url = "http://scheet.org/code/macOSfp.tar.gz"
