@@ -13,7 +13,4 @@ else
 end
 run(`chmod +x $fastPHASE_EXE`) # fastPHASE executable by default is read-only
 
-using fastPHASE
-run(`$fastPHASE_EXE -h`)
-
 end # module
