@@ -6,12 +6,14 @@ export fastPHASE_EXE
 
 if Sys.isapple()
     fastPHASE_EXE = joinpath(artifact"fastPHASE", "fastPHASE")
-    run(`chmod +x $fastPHASE_EXE`) # fastPHASE executable by default is read-only
 elseif Sys.islinux()
     fastPHASE_EXE = joinpath(artifact"fastPHASE", "fastPHASE")
-    run(`chmod +x $fastPHASE_EXE`) # fastPHASE executable by default is read-only
 else
     error("fastPHASE only supports Linux and MacOS")
 end
+run(`chmod +x $fastPHASE_EXE`) # fastPHASE executable by default is read-only
+
+using fastPHASE
+run(`$fastPHASE_EXE -h`)
 
 end # module
