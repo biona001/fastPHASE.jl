@@ -3,6 +3,8 @@ module fastPHASE
 using Pkg.Artifacts
 using SnpArrays
 using DelimitedFiles
+using CSV
+using DataFrames
 
 export fastPHASE_EXE,
     fastphase_estim_param,

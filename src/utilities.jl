@@ -1,3 +1,8 @@
+function fastphase_estim_param(plinkfile::AbstractString; args...)
+    xdata = SnpData(plinkfile)
+    return fastphase_estim_param(xdata; args...)
+end
+
 function fastphase_estim_param(
     xdata::SnpData;
     n::Int = size(xdata.snparray, 1), # number of samples used to fit HMM
@@ -83,14 +88,17 @@ end
 """
     process_fastphase_output(datadir, T; [extension])
 
-Reads r, θ, α into memory, averaging over `T` simulations. 
+Reads r, θ, α into memory, averaging over `T` simulations. Note θ must be flipped
+sometimes depending on which allele was defined as "allele 1", and this info is 
+provided in the "_origchars" file. 
 
 # Inputs
-`datadir`: Directory that the `rhat.txt`, `thetahat.txt`, `alphahat.txt` files are stored
+`datadir`: Directory that the `rhat.txt`, `thetahat.txt`, `alphahat.txt` and
+    `_origchars` files are stored.
 `T`: Number of different runs excuted by fastPHASE. This is the number of different 
     initial conditions used for EM algorithm. All files `rhat.txt`, `thetahat.txt`,
     `alphahat.txt` would therefore have `T × p` rows
-`extension`: Name in front of the output fastPHASE files. E.g. Use `extension=out_`
+`extension`: Name in front of the output fastPHASE files. E.g. Use `extension=out`
     if your output files are `out_rhat.txt`, `out_thetahat.txt`, `out_alphahat.txt`
 """
 function process_fastphase_output(
@@ -102,11 +110,13 @@ function process_fastphase_output(
     rfile = joinpath(datadir, "$(extension)_rhat.txt") # T*p × 1
     θfile = joinpath(datadir, "$(extension)_thetahat.txt") # T*p × K
     αfile = joinpath(datadir, "$(extension)_alphahat.txt") # T*p × K
-    isfile(rfile) && isfile(θfile) && isfile(αfile) || error("Files not found!")
+    charfile = joinpath(datadir, "$(extension)_origchars") # p × 2 file
+    isfile(rfile) && isfile(θfile) && isfile(αfile) && isfile(charfile) ||
+        error("Files not found!")
     r_full = readdlm(rfile, comments=true, comment_char = '>', header=false)
     θ_full = readdlm(θfile, comments=true, comment_char = '>', header=false)
     α_full = readdlm(θfile, comments=true, comment_char = '>', header=false)
-
+    flip_idx = flip_θ_index(charfile)
     # compute averages across T simulations as suggested by Scheet et al 2006
     p = Int(size(r_full, 1) / T)
     K = size(θ_full, 2)
@@ -114,12 +124,32 @@ function process_fastphase_output(
     for i in 1:T
         rows = (i - 1) * p + 1:p*i
         r .+= @view(r_full[rows])
-        θ .+= @view(θ_full[rows, :])
         α .+= @view(α_full[rows, :])
+        # make sure to flip θ values if the allele 1 and 2 was flipped by fastPHASE
+        θtmp = @view(θ_full[rows, :])
+        for i in eachindex(flip_idx)
+            if flip_idx[i]
+                for j in 1:K
+                    θtmp[i, j] = 1 - θtmp[i, j]
+                end
+            end
+        end
+        θ .+= θtmp
     end
     r ./= T
     θ ./= T
     α ./= T
     α ./= sum(α, dims = 2) # normalize rows to sum to 1
     return r, θ, α
+end
+
+function flip_θ_index(charfile::AbstractString)
+    cfile = CSV.read(charfile, DataFrame, delim='\t', header=false, skipto=2)
+    flip_idx = falses(size(cfile, 1))
+    for i in 1:length(flip_idx)
+        if cfile[i, 2] == "10" || cfile[i, 2] == "1?"
+            flip_idx[i] = true
+        end
+    end
+    return flip_idx
 end
