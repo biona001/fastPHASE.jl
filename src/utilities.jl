@@ -1,17 +1,41 @@
-function fastphase_estim_param(plinkfile::AbstractString; args...)
-    xdata = SnpData(plinkfile)
-    return fastphase_estim_param(xdata; args...)
+function fastphase()
+    return nothing # todo
 end
 
+"""
+    fastphase_estim_param(xdata; ...)
+
+Runs fastPHASE to estimate `r`, `θ`, `α` parameters. Will run different initial
+EM starts in parallel if Julia is started with multiple threads. `θ` (emission)
+probabilities) values will automatically be flipped so that `θ[i, j]` is the
+probability of observing allele A2 (usually major) in the PLINK bam file at
+SNP `i` of haplotype `j`.
+
+# Inputs
+`xdata`: A `String` for binary PLINK file (without `.bed/bim/fam` extensions) 
+    or a `SnpData` (see SnpArrays.jl). 
+
+# Optional inputs
+`n`: Number of samples used to fit HMM in fastPHASE. Defaults to sample size in `xdata`.
+`T`: Number of different initial conditions for EM. Different initial conditions
+    will be run in parallel in `Threads.nthreads()` number of threads.
+`K`: Number of haplotype clusters. Defaults to 12
+`C`: Number of EM iterations before convergence. Defaults to 10.
+`outfile`: Extension of output alpha, theta, and r file names. Defaults to `fastphase_out`
+`outdir`: Output directory. By default all output will be stored in new folder in 
+    `knockoffs` in the current directory.
+`fastphase_infile`: Filename of fastPHASE's input, which is the decompressed PLINK
+    genotypes readable by fastPHASE. Defaults to `fastphase.inp`. 
+"""
 function fastphase_estim_param(
     xdata::SnpData;
-    n::Int = size(xdata.snparray, 1), # number of samples used to fit HMM
-    T::Int = Threads.nthreads(), # number of different initial conditions for EM
-    K::Int = 12, # number of clusters
-    C::Int = 10, # number of EM iterations
-    out::AbstractString = "fastphase_out",
-    fastphase_infile::AbstractString = "fastphase.inp",
-    outdir::AbstractString = pwd()
+    n::Int = size(xdata.snparray, 1),
+    T::Int = Threads.nthreads(),
+    K::Int = 12,
+    C::Int = 10,
+    outfile::AbstractString = "fastphase_out",
+    outdir::AbstractString = mkdir("knockoffs"),
+    fastphase_infile::AbstractString = joinpath(outdir, "fastphase.inp"),
     )
     x = xdata.snparray
     n ≤ size(x, 1) || error("n must be smaller than the number of samples!")
@@ -59,7 +83,7 @@ function fastphase_estim_param(
     # aggregate results into final output
     r, θ, α = zeros(p), zeros(p, K), zeros(p, K)
     for i in 1:T
-        rtmp, θtmp, αtmp = process_fastphase_output(outdir; T=1, extension="tmp$(i)")
+        rtmp, θtmp, αtmp = process_fastphase_output("tmp$(i)"; T=1)
         r .+= rtmp
         θ .+= θtmp
         α .+= αtmp
@@ -69,15 +93,14 @@ function fastphase_estim_param(
     α ./= T
     α ./= sum(α, dims = 2) # normalize rows to sum to 1
     # save averaged results
-    writedlm(out * "_rhat.txt", r, ' ')
-    writedlm(out * "_thetahat.txt", θ, ' ')
-    writedlm(out * "_alphahat.txt", α, ' ')
-    # save orichar file which determines which allele was "allele 1" in θ file
-    # since all theta have been flipped, all origchar will be 01
-    open(joinpath(outdir, out * "_origchars"), "w") do io
+    writedlm(joinpath(outdir, outfile * "_rhat.txt"), r, ' ')
+    writedlm(joinpath(outdir, outfile * "_thetahat.txt"), θ, ' ')
+    writedlm(joinpath(outdir, outfile * "_alphahat.txt"), α, ' ')
+    # save orichar file, which determines which allele was "allele 1" in θ file
+    open(joinpath(outdir, outfile * "_origchars"), "w") do io
         println(io, p)
         for i in 1:p
-            println(io, "2\t01")
+            println(io, "2\t01") # since all theta are flipped, all origchar will be 01
         end
     end
     # clean up
@@ -93,32 +116,35 @@ function fastphase_estim_param(
     return r, θ, α
 end
 
-"""
-    process_fastphase_output(datadir, T; [extension])
+fastphase_estim_param(xdata::AbstractString; args...) = 
+    fastphase_estim_param(SnpData(plinkfile); args...)
 
-Reads r, θ, α into memory, averaging over `T` simulations. Note θ must be flipped
-sometimes depending on which allele was defined as "allele 1", and this info is 
-provided in the "_origchars" file. 
+"""
+    process_fastphase_output(filename; [T])
+
+Reads r, θ, α into memory, averaging over `T` simulations. θ (emission probabilities)
+must be flipped sometimes depending on which allele was defined as "allele 1".
+fastPHASE simply uses whichever allele was observed first in sample 1 haplotype 1.
+Thus, in sample 1, genotypes that start with "10" or "1?" must be flipped, and
+this info is provided in the "_origchars" file. 
 
 # Inputs
-`datadir`: Directory that the `rhat.txt`, `thetahat.txt`, `alphahat.txt` and
-    `_origchars` files are stored.
+`filename`: Path to the `rhat.txt`, `thetahat.txt`, `alphahat.txt` and
+    `_origchars` files are stored. E.g. Use `out`
+    if your output files are `out_rhat.txt`, `out_thetahat.txt`, `out_alphahat.txt`
 `T`: Number of different runs excuted by fastPHASE. This is the number of different 
     initial conditions used for EM algorithm. All files `rhat.txt`, `thetahat.txt`,
     `alphahat.txt` would therefore have `T × p` rows
-`extension`: Name in front of the output fastPHASE files. E.g. Use `extension=out`
-    if your output files are `out_rhat.txt`, `out_thetahat.txt`, `out_alphahat.txt`
 """
 function process_fastphase_output(
-    datadir::AbstractString;
+    filename::AbstractString;
     T::Int=1,
-    extension="out"
     )
     # read full data 
-    rfile = joinpath(datadir, "$(extension)_rhat.txt") # T*p × 1
-    θfile = joinpath(datadir, "$(extension)_thetahat.txt") # T*p × K
-    αfile = joinpath(datadir, "$(extension)_alphahat.txt") # T*p × K
-    charfile = joinpath(datadir, "$(extension)_origchars") # p × 2 file
+    rfile = "$(filename)_rhat.txt" # T*p × 1
+    θfile = "$(filename)_thetahat.txt" # T*p × K
+    αfile = "$(filename)_alphahat.txt" # T*p × K
+    charfile = "$(extension)_origchars" # p × 2 file
     isfile(rfile) && isfile(θfile) && isfile(αfile) && isfile(charfile) ||
         error("Files not found!")
     r_full = readdlm(rfile, comments=true, comment_char = '>', header=false)

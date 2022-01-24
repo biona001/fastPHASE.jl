@@ -8,7 +8,8 @@ using DataFrames
 
 export fastPHASE_EXE,
     fastphase_estim_param,
-    process_fastphase_output
+    process_fastphase_output,
+    fastphase
 
 if Sys.isapple()
     fastPHASE_EXE = joinpath(artifact"fastPHASE", "fastPHASE")
