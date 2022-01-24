@@ -84,7 +84,7 @@ function fastphase_estim_param(
     # aggregate results into final output
     r, θ, α = zeros(p), zeros(p, K), zeros(p, K)
     for i in 1:T
-        rtmp, θtmp, αtmp = process_fastphase_output("tmp$(i)"; T=1)
+        rtmp, θtmp, αtmp = process_fastphase_output(joinpath(outdir, "tmp$(i)"); T=1)
         r .+= rtmp
         θ .+= θtmp
         α .+= αtmp
@@ -145,7 +145,7 @@ function process_fastphase_output(
     rfile = "$(filename)_rhat.txt" # T*p × 1
     θfile = "$(filename)_thetahat.txt" # T*p × K
     αfile = "$(filename)_alphahat.txt" # T*p × K
-    charfile = "$(extension)_origchars" # p × 2 file
+    charfile = "$(filename)_origchars" # p × 2 file
     isfile(rfile) && isfile(θfile) && isfile(αfile) && isfile(charfile) ||
         error("Files not found!")
     r_full = readdlm(rfile, comments=true, comment_char = '>', header=false)
