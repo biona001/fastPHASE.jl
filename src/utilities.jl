@@ -34,9 +34,10 @@ function fastphase_estim_param(
     K::Int = 12,
     C::Int = 10,
     outfile::AbstractString = "fastphase_out",
-    outdir::AbstractString = mkdir("knockoffs"),
+    outdir::AbstractString = "knockoffs",
     fastphase_infile::AbstractString = joinpath(outdir, "fastphase.inp"),
     )
+    isdir(outdir) || mkdir(outdir)
     x = xdata.snparray
     n ≤ size(x, 1) || error("n must be smaller than the number of samples!")
     sampleid = xdata.person_info[!, :iid]
@@ -186,4 +187,47 @@ function flip_θ_index(charfile::AbstractString)
         end
     end
     return flip_idx
+end
+
+# function merge_knockoffs_with_original(
+#     xdata::SnpData,
+#     x̃data::SnpData,
+#     des::AbstractString
+#     )
+#     d = Dict{AbstractString, SnpData}("original"=>xdata, "knockoff"=>x̃data)
+#     write_plink(des, merge_plink(d))
+# end
+
+function merge_knockoffs_with_original(
+    xdata::SnpData,
+    x̃data::SnpData;
+    des::AbstractString = "knockoff"
+    )
+    n, p = size(xdata)
+    x, x̃ = xdata.snparray, x̃data.snparray
+    xfull = SnpArray(des * ".bed", n, 2p)
+    original, knockoff = sizehint!(Int[], p), sizehint!(Int[], p)
+    for i in 1:p
+        # decide which of original or knockoff SNP comes first
+        orig, knoc = rand() < 0.5 ? (2i - 1, 2i) : (2i, 2i - 1)
+        copyto!(@view(xfull[:, knoc]), @view(x̃[:, i]))
+        copyto!(@view(xfull[:, orig]), @view(x[:, i]))
+        push!(original, orig)
+        push!(knockoff, knoc)
+    end
+    # copy fam files
+    cp(xdata.srcfam, des * ".fam", force=true)
+    # copy bim file, knockoff SNPs end in ".k"
+    new_bim = copy(xdata.snp_info)
+    empty!(new_bim)
+    for i in 1:p
+        if original[i] < knockoff[i]
+            push!(new_bim, xdata.snp_info[i, :])
+            push!(new_bim, x̃data.snp_info[i, :])
+        else
+            push!(new_bim, x̃data.snp_info[i, :])
+            push!(new_bim, xdata.snp_info[i, :])
+        end
+    end
+    CSV.write(des * ".bim", new_bim, delim='\t', header=false)
 end
