@@ -73,15 +73,15 @@ function fastphase_estim_param(
     writedlm(out * "_thetahat.txt", θ, ' ')
     writedlm(out * "_alphahat.txt", α, ' ')
     # clean up
-    for i in 1:T
-        rm(joinpath(outdir, "tmp$(i)_rhat.txt"), force=true)
-        rm(joinpath(outdir, "tmp$(i)_thetahat.txt"), force=true)
-        rm(joinpath(outdir, "tmp$(i)_alphahat.txt"), force=true)
-        rm(joinpath(outdir, "tmp$(i)_hapsfrommodel.out"), force=true)
-        rm(joinpath(outdir, "tmp$(i)_hapguess_switch.out"), force=true)
-        rm(joinpath(outdir, "tmp$(i)_origchars"), force=true)
-        rm(joinpath(outdir, "tmp$(i)_sampledHgivG.txt"), force=true)
-    end
+    # for i in 1:T
+    #     rm(joinpath(outdir, "tmp$(i)_rhat.txt"), force=true)
+    #     rm(joinpath(outdir, "tmp$(i)_thetahat.txt"), force=true)
+    #     rm(joinpath(outdir, "tmp$(i)_alphahat.txt"), force=true)
+    #     rm(joinpath(outdir, "tmp$(i)_hapsfrommodel.out"), force=true)
+    #     rm(joinpath(outdir, "tmp$(i)_hapguess_switch.out"), force=true)
+    #     rm(joinpath(outdir, "tmp$(i)_origchars"), force=true)
+    #     rm(joinpath(outdir, "tmp$(i)_sampledHgivG.txt"), force=true)
+    # end
     return r, θ, α
 end
 
