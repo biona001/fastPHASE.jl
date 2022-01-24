@@ -72,6 +72,14 @@ function fastphase_estim_param(
     writedlm(out * "_rhat.txt", r, ' ')
     writedlm(out * "_thetahat.txt", θ, ' ')
     writedlm(out * "_alphahat.txt", α, ' ')
+    # save orichar file which determines which allele was "allele 1" in θ file
+    # since all theta have been flipped, all origchar will be 01
+    open(joinpath(outdir, out * "_origchars"), "w") do io
+        println(io, p)
+        for i in 1:p
+            println(io, "2\t01")
+        end
+    end
     # clean up
     # for i in 1:T
     #     rm(joinpath(outdir, "tmp$(i)_rhat.txt"), force=true)
