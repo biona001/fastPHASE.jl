@@ -182,7 +182,7 @@ function flip_θ_index(charfile::AbstractString)
     cfile = CSV.read(charfile, DataFrame, delim='\t', header=false, skipto=2)
     flip_idx = falses(size(cfile, 1))
     for i in 1:length(flip_idx)
-        if cfile[i, 2] == "10" || cfile[i, 2] == "1?"
+        if cfile[i, 2] == "10" || cfile[i, 2] == "1?" || cfile[i, 2] == 10
             flip_idx[i] = true
         end
     end
