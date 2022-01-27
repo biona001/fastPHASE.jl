@@ -150,7 +150,7 @@ function process_fastphase_output(
         error("Files not found!")
     r_full = readdlm(rfile, comments=true, comment_char = '>', header=false)
     θ_full = readdlm(θfile, comments=true, comment_char = '>', header=false)
-    α_full = readdlm(θfile, comments=true, comment_char = '>', header=false)
+    α_full = readdlm(αfile, comments=true, comment_char = '>', header=false)
     flip_idx = flip_θ_index(charfile)
     # compute averages across T simulations as suggested by Scheet et al 2006
     p = Int(size(r_full, 1) / T)
