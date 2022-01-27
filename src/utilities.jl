@@ -82,38 +82,17 @@ function fastphase_estim_param(
         run(`$fastPHASE_EXE -T1 -S$seed -K$K -C$C -o$tmp_out -Pp -H$H -s$s -U$U $fastphase_infile`)
     end
     # aggregate results into final output
-    r, θ, α = zeros(p), zeros(p, K), zeros(p, K)
-    for i in 1:T
-        rtmp, θtmp, αtmp = process_fastphase_output(joinpath(outdir, "tmp$(i)"); T=1)
-        r .+= rtmp
-        θ .+= θtmp
-        α .+= αtmp
-    end
-    r ./= T
-    θ ./= T
-    α ./= T
-    α ./= sum(α, dims = 2) # normalize rows to sum to 1
-    # save averaged results
-    writedlm(joinpath(outdir, outfile * "_rhat.txt"), r, ' ')
-    writedlm(joinpath(outdir, outfile * "_thetahat.txt"), θ, ' ')
-    writedlm(joinpath(outdir, outfile * "_alphahat.txt"), α, ' ')
-    # save orichar file, which determines which allele was "allele 1" in θ file
-    open(joinpath(outdir, outfile * "_origchars"), "w") do io
-        println(io, p)
-        for i in 1:p
-            println(io, "2\t01") # since all theta are flipped, all origchar will be 01
-        end
-    end
+    _combine_fastphase_output(outdir, T, outfile=outfile)
     # clean up
-    # for i in 1:T
-    #     rm(joinpath(outdir, "tmp$(i)_rhat.txt"), force=true)
-    #     rm(joinpath(outdir, "tmp$(i)_thetahat.txt"), force=true)
-    #     rm(joinpath(outdir, "tmp$(i)_alphahat.txt"), force=true)
-    #     rm(joinpath(outdir, "tmp$(i)_hapsfrommodel.out"), force=true)
-    #     rm(joinpath(outdir, "tmp$(i)_hapguess_switch.out"), force=true)
-    #     rm(joinpath(outdir, "tmp$(i)_origchars"), force=true)
-    #     rm(joinpath(outdir, "tmp$(i)_sampledHgivG.txt"), force=true)
-    # end
+    for i in 1:T
+        # rm(joinpath(outdir, "tmp$(i)_rhat.txt"), force=true)
+        # rm(joinpath(outdir, "tmp$(i)_thetahat.txt"), force=true)
+        # rm(joinpath(outdir, "tmp$(i)_alphahat.txt"), force=true)
+        # rm(joinpath(outdir, "tmp$(i)_origchars"), force=true)
+        rm(joinpath(outdir, "tmp$(i)_hapsfrommodel.out"), force=true)
+        rm(joinpath(outdir, "tmp$(i)_hapguess_switch.out"), force=true)
+        rm(joinpath(outdir, "tmp$(i)_sampledHgivG.txt"), force=true)
+    end
     return r, θ, α
 end
 
@@ -187,6 +166,35 @@ function flip_θ_index(charfile::AbstractString)
         end
     end
     return flip_idx
+end
+
+function _combine_fastphase_output(
+    outdir::AbstractString, 
+    T::Int;
+    outfile::AbstractString="fastphase_out"
+    )
+    r, θ, α = process_fastphase_output(joinpath(outdir, "tmp1"); T=1)
+    for i in 2:T
+        rtmp, θtmp, αtmp = process_fastphase_output(joinpath(outdir, "tmp$i"); T=1)
+        r .+= rtmp
+        θ .+= θtmp
+        α .+= αtmp
+    end
+    r ./= T
+    θ ./= T
+    α ./= T
+    α ./= sum(α, dims = 2) # normalize rows to sum to 1
+    # save averaged results
+    writedlm(joinpath(outdir, outfile * "_rhat.txt"), r, ' ')
+    writedlm(joinpath(outdir, outfile * "_thetahat.txt"), θ, ' ')
+    writedlm(joinpath(outdir, outfile * "_alphahat.txt"), α, ' ')
+    open(joinpath(outdir, outfile * "_origchars"), "w") do io
+        println(io, length(r))
+        for i in 1:length(r)
+            println(io, "2\t01") # since all theta are flipped, all origchar will be 01
+        end
+    end
+    return r, θ, α
 end
 
 # function merge_knockoffs_with_original(
