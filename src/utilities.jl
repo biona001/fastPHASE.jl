@@ -82,7 +82,7 @@ function fastphase_estim_param(
         run(`$fastPHASE_EXE -T1 -S$seed -K$K -C$C -o$tmp_out -Pp -H$H -s$s -U$U $fastphase_infile`)
     end
     # aggregate results into final output
-    _combine_fastphase_output(outdir, T, outfile=outfile)
+    r, θ, α = _combine_fastphase_output(outdir, T, outfile=outfile)
     # clean up
     for i in 1:T
         # rm(joinpath(outdir, "tmp$(i)_rhat.txt"), force=true)
