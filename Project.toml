@@ -12,3 +12,9 @@ SnpArrays = "4e780e97-f5bf-4111-9dc4-b70aaf691b06"
 
 [compat]
 julia = "1.6"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
