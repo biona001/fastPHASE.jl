@@ -7,6 +7,7 @@ makedocs(
     modules = [fastPHASE],
     pages = [
         "Home" => "index.md",
+        "API" => "man/api.md",
     ]
 )
 
