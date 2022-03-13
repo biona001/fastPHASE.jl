@@ -2,7 +2,7 @@
 
 | **Documentation** | **Build Status** | **Code Coverage**  |
 |-------------------|------------------|--------------------|
-| [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://biona001.github.io/fastPHASE.jl/dev/) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://biona001.github.io/fastPHASE.jl/stable/) | [![build Actions Status](https://github.com/biona001/fastPHASE.jl/workflows/CI/badge.svg)](https://github.com/biona001/fastPHASE.jl/actions) [![CI (Julia nightly)](https://github.com/biona001/fastPHASE.jl/workflows/JuliaNightly/badge.svg)](https://github.com/biona001/fastPHASE.jl/actions/workflows/JuliaNightly.yml) | [![codecov](https://codecov.io/gh/biona001/fastPHASE.jl/branch/master/graph/badge.svg?token=YyPqiFpIM1)](https://codecov.io/gh/biona001/fastPHASE.jl) |
+| [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://biona001.github.io/fastPHASE.jl/dev/) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://biona001.github.io/fastPHASE.jl/stable/) | [![build Actions Status](https://github.com/biona001/fastPHASE.jl/workflows/CI/badge.svg)](https://github.com/biona001/fastPHASE.jl/actions) | [![codecov](https://codecov.io/gh/biona001/fastPHASE.jl/branch/master/graph/badge.svg?token=YyPqiFpIM1)](https://codecov.io/gh/biona001/fastPHASE.jl) |
 
 fastPHASE.jl is a Julia wrapper of the popular [fastPHASE](https://stephenslab.uchicago.edu/software.html#fastphase) genetics program, designed for haplotype reconstruction and estimating missing genotypes from population data. 
 
@@ -20,10 +20,11 @@ Adding VCF, BGEN, and PGEN support in this manner via corresponding OpenMendel m
 
 ## Installation
 
-fastPHASE.jl requires Julia v1.6 or later. It is not yet registered and can be installed, in the Julia Pkg mode, by
+fastPHASE.jl requires Julia v1.6 or later. It is not yet registered and can be installed by
 
 ```julia
-(@v1.6) Pkg> add https://github.com/biona001/fastPHASE.jl
+using Pkg
+pkg"add https://github.com/biona001/fastPHASE.jl"
 ```
 
 The original fastPHASE software thus fastPHASE.jl only support Linux and MacOS.
